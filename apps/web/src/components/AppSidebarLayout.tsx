@@ -1,3 +1,4 @@
+import { BotSidebar } from "../bots/BotSidebar";
 import { useAtomValue } from "@effect/atom-react";
 import * as Schema from "effect/Schema";
 import {
@@ -219,6 +220,7 @@ function ProjectProjectionRetention() {
 export function AppSidebarLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const legacySidebarEnabled = useLegacySidebarEnabled();
+  const [workbench, setWorkbench] = useState(false);
   const { active: panelAnimationsActive, durationMs: panelAnimationDurationMs } =
     usePanelAnimationSettings();
   // Settings routes show the settings nav in place of whichever thread
@@ -328,10 +330,21 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
               <SidebarChromeHeader isElectron={isElectron} />
               <SettingsSidebarNav pathname={pathname} />
             </>
-          ) : legacySidebarEnabled ? (
-            <LegacyThreadSidebar />
+          ) : !workbench ? (
+            <BotSidebar onWorkbench={() => setWorkbench(true)} />
           ) : (
-            <ThreadSidebar />
+            <>
+              <div className="px-4 py-2">
+                <button
+                  type="button"
+                  className="text-sm text-primary hover:underline"
+                  onClick={() => setWorkbench(false)}
+                >
+                  Back to bots
+                </button>
+              </div>
+              {legacySidebarEnabled ? <LegacyThreadSidebar /> : <ThreadSidebar />}
+            </>
           )}
           <SidebarRail onDoubleClick={resetSidebarWidth} />
         </Sidebar>

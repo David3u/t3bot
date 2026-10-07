@@ -37,12 +37,12 @@ import { isExactServiceVersion, SERVICE_LAUNCHER_PROTOCOL } from "./serviceProto
 
 const PREFLIGHT_TIMEOUT = Duration.seconds(30);
 
-export function resolveServerSelfUpdateCapability(input: {
+export function resolveServerSelfUpdateCapability(_input: {
   readonly desktopManaged: boolean;
   readonly launcherManaged: boolean;
 }): ServerSelfUpdateCapability | null {
-  if (input.desktopManaged) return "desktop-managed" as const;
-  return input.launcherManaged ? ("boot-service" as const) : null;
+  // A source fork has no published update channel yet.
+  return null;
 }
 
 export class ServerSelfUpdate extends Context.Service<
@@ -209,7 +209,7 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
     }
     if (capability === null) {
       return yield* failWith(
-        "Remote updates require the T3 Code background service. Run `t3 service install` on the server machine.",
+        "T3bot has no published update channel yet. Update this source checkout and rebuild locally.",
       );
     }
 

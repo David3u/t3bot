@@ -22,6 +22,8 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import * as GitWorkflowService from "../git/GitWorkflowService.ts";
+import { formatBotContext } from "@t3tools/contracts";
+import { readBotProfile } from "../bots/BotProfiles.ts";
 import * as ProjectService from "../project/ProjectService.ts";
 import * as ProviderAuthService from "../provider/ProviderAuthService.ts";
 import * as EventSink from "./EventSink.ts";
@@ -1165,7 +1167,14 @@ export const layer: Layer.Layer<
           });
           if (!(yield* isCurrentAttemptInStatus("running"))) return;
           const start = compact ? session.compactThread! : session.startTurn;
-          const context = [delivery.context, restartNote]
+          const botProject = yield* projects.getById(projection.thread.projectId);
+          const botProfile = Option.isSome(botProject)
+            ? yield* readBotProfile(botProject.value.workspaceRoot).pipe(
+                Effect.provideService(FileSystem.FileSystem, fileSystem),
+              )
+            : null;
+          const botContext = botProfile === null ? "" : formatBotContext(botProfile);
+          const context = [botContext, delivery.context, restartNote]
             .filter((part) => part !== "")
             .join("\n\n");
           // A note continuation has no turn to resume; its text is the prompt.
@@ -1200,13 +1209,8 @@ export const layer: Layer.Layer<
                 }),
           ),
         );
-      const deliverySession =
-        effectiveHandoffs.length === 0 &&
-        missedItems.length === 0 &&
-        restartNote === "" &&
-        !noteContinuation
-          ? session
-          : makeDeliverySession(session, startWithHandoffs);
+      // Bot role and memory also apply when there is no provider handoff.
+      const deliverySession = makeDeliverySession(session, startWithHandoffs);
       yield* runExecution.startRootRun({
         commandId: CommandId.make(`command:effect:provider-turn.start:${run.id}`),
         appThread: projection.thread,

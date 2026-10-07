@@ -1,3 +1,4 @@
+import { Bot, BotCreateInput, BotUpdateInput, BotError } from "./bot.ts";
 import { OrchestrationDispatchCommandError } from "./orchestrationDispatch.ts";
 import {
   ChatGptReconnectProfileInput,
@@ -340,6 +341,9 @@ import { VcsError } from "./vcs.ts";
 import { Project, ProjectMutation, ProjectMutationError } from "./project.ts";
 
 export const WS_METHODS = {
+  botsList: "bots.list",
+  botsCreate: "bots.create",
+  botsUpdate: "bots.update",
   // Project registry methods
   projectsList: "projects.list",
   projectsAdd: "projects.add",
@@ -1731,7 +1735,26 @@ export class RpcScopeAuthorization extends RpcMiddleware.Service<RpcScopeAuthori
   { error: EnvironmentAuthorizationError },
 ) {}
 
+const WsBotsListRpc = Rpc.make(WS_METHODS.botsList, {
+  payload: Schema.Struct({}),
+  success: Schema.Array(Bot),
+  error: Schema.Union([BotError, EnvironmentAuthorizationError]),
+});
+const WsBotsCreateRpc = Rpc.make(WS_METHODS.botsCreate, {
+  payload: BotCreateInput,
+  success: Bot,
+  error: Schema.Union([BotError, EnvironmentAuthorizationError]),
+});
+const WsBotsUpdateRpc = Rpc.make(WS_METHODS.botsUpdate, {
+  payload: BotUpdateInput,
+  success: Bot,
+  error: Schema.Union([BotError, EnvironmentAuthorizationError]),
+});
+
 export const WsRpcGroup = RpcGroup.make(
+  WsBotsListRpc,
+  WsBotsCreateRpc,
+  WsBotsUpdateRpc,
   WsServerProbeRpc,
   WsServerGetConfigRpc,
   WsServerRefreshProvidersRpc,

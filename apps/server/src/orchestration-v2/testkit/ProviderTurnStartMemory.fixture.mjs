@@ -5,12 +5,24 @@ import * as NodeAssert from "node:assert/strict";
 const root = process.argv[2];
 const mode = process.argv[3];
 const withHandoff = mode.startsWith("handoff");
+const withBot = mode === "bot";
+const profile = {
+  version: 1,
+  name: "Atlas",
+  avatar: "🔎",
+  role: "Research with sources.",
+  memory: "Use metric units.",
+  archived: false,
+  revision: 0,
+  updatedAt: "2026-10-06T00:00:00.000Z",
+};
 const require = NodeModule.createRequire(root + "/apps/server/package.json");
 const load = (name) => import(NodeURL.pathToFileURL(require.resolve("effect/" + name)));
-const [Effect, Layer, FileSystem] = await Promise.all([
+const [Effect, Layer, FileSystem, Option] = await Promise.all([
   load("Effect"),
   load("Layer"),
   load("FileSystem"),
+  load("Option"),
 ]);
 const app = (file) => import(NodeURL.pathToFileURL(root + "/apps/server/src/" + file + ".ts"));
 const [Start, Projection, Run, Sessions, Policy, Id, Sink, Handoff, Git, Project, Auth] =
@@ -38,16 +50,29 @@ const session = {
   driver: "codex",
   providerSession: { id: "session", driver: "codex" },
   resumeThread: ({ providerThread }) => Effect.succeed(providerThread),
-  startTurn: () =>
-    mode === "handoff-failure" ? Effect.fail("Synthetic startup failure") : Effect.void,
+  startTurn: (input) =>
+    Effect.sync(() => {
+      if (withBot) {
+        NodeAssert.match(input.message.text, /Research with sources/);
+        NodeAssert.match(input.message.text, /Use metric units/);
+        NodeAssert.match(input.message.text, /User message:/);
+      }
+    }).pipe(
+      Effect.andThen(
+        mode === "handoff-failure" ? Effect.fail("Synthetic startup failure") : Effect.void,
+      ),
+    ),
   compactThread: () => Effect.void,
 };
 const dependencies = Layer.mergeAll(
   Layer.mock(Handoff.ContextHandoffServiceV2)({}),
   Id.layer,
-  FileSystem.layerNoop({}),
+  FileSystem.layerNoop({ readFileString: () => Effect.succeed(JSON.stringify(profile)) }),
   Layer.mock(Git.GitWorkflowService)({}),
-  Layer.mock(Project.ProjectService)({}),
+  Layer.mock(Project.ProjectService)({
+    getById: () =>
+      Effect.succeed(withBot ? Option.some({ workspaceRoot: "/synthetic" }) : Option.none()),
+  }),
   Layer.mock(Auth.ProviderAuthService)({}),
   Layer.mock(Projection.ProjectionStoreV2)({
     getThreadProjection: () =>

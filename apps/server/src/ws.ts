@@ -201,6 +201,7 @@ import { linkCreatedPullRequest } from "./git/linkCreatedPullRequest.ts";
 import * as ReviewService from "./review/ReviewService.ts";
 import * as ProjectEnrichmentService from "./project/ProjectEnrichmentService.ts";
 import * as ProjectService from "./project/ProjectService.ts";
+import * as BotService from "./bots/BotService.ts";
 import * as ManagedProjectFolders from "./project/ManagedProjectFolders.ts";
 import { projectMutationOperation } from "./project/ProjectMutation.ts";
 import * as ProjectSetupScriptRunner from "./project/ProjectSetupScriptRunner.ts";
@@ -1201,6 +1202,7 @@ const layerWsRpc = (
       const projectStore = yield* ProjectStore.ProjectStoreV2;
       const projectService = yield* ProjectService.ProjectService;
       const managedFolders = yield* ManagedProjectFolders.ManagedProjectFolders;
+      const bots = yield* BotService.BotService;
       const threadSearch = yield* ThreadSearch.ThreadSearch;
 
       const providerSessionsV2 = yield* ProviderSessionManager.ProviderSessionManagerV2;
@@ -2998,6 +3000,9 @@ const layerWsRpc = (
             ),
             { "rpc.aggregate": "orchestration" },
           ),
+        [WS_METHODS.botsList]: () => bots.list,
+        [WS_METHODS.botsCreate]: (input) => bots.create(input),
+        [WS_METHODS.botsUpdate]: (input) => bots.update(input),
         [WS_METHODS.projectsCreateNew]: (input) =>
           observeRpcEffect(
             WS_METHODS.projectsCreateNew,

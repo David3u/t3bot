@@ -1,3 +1,4 @@
+import { BotConversationBar } from "../bots/BotConversationBar";
 import { ChatCanvas } from "./chat/ChatCanvas";
 import { usageLimitRecoveryBannerItem } from "./chat/UsageLimitRecoveryBanner";
 import {
@@ -6067,8 +6068,10 @@ export default function ChatView(props: ChatViewProps) {
     () =>
       subscribePreviewAction((action) => {
         if (action === "toggle-panel") togglePreviewPanel();
+        if (action === "open-files") addFilesSurface();
+        if (action === "toggle-terminal") toggleTerminalVisibility();
       }),
-    [togglePreviewPanel],
+    [togglePreviewPanel, addFilesSurface, toggleTerminalVisibility],
   );
   const persistThreadSettingsForNextTurn = useCallback(
     async (input: {
@@ -11016,6 +11019,12 @@ export default function ChatView(props: ChatViewProps) {
               : {})}
           />
         </header>
+
+        <BotConversationBar
+          environmentId={environmentId}
+          projectId={activeProject?.id ?? null}
+          threadId={isServerThread ? activeThread.id : null}
+        />
 
         {/* Main content area with optional plan sidebar */}
         <div className="relative flex min-h-0 min-w-0 flex-1">

@@ -1,134 +1,61 @@
-# T3 Code
+# T3bot
 
-T3 Code is an "agent harness control surface". It enables control of the agents on your machine with a best-in-class mobile app ([iOS](https://apps.apple.com/us/app/t3-code-remote-claude-more/id6787819824), [Android](https://play.google.com/store/apps/details?id=com.t3tools.t3code)), [web app](https://app.t3.codes) and [Electron-based desktop app](https://t3.codes).
+Persistent bots with your choice of agent harness, built as a fork of [T3 Code](https://github.com/pingdotgg/t3code).
 
-Works with your subscriptions on Claude Code, Codex, Cursor, Grok Build, OpenCode, and Google Antigravity. If they're set up on your computer, T3 Code can control them.
+This is a development build. It adds a bot-first interface to T3’s existing execution, browser, scheduling, and remote-connection services. It is inspired by the documented workflows of Grok Bot, Hermes, and Muse; it does not yet have full feature or visual parity with them.
 
-## "Wait, what are you selling me?"
+## Run locally
 
-Nothing. We built T3 Code because we wanted the best possible development experience with agents. We were inspired by existing solutions like the Codex desktop app, Conductor, Claude Desktop and Cursor Glass, but none met our bar.
-
-We wanted something performant, remote-ready, and truly open. If we ever go the wrong direction, we want you to have everything you need to fork and build the editor that you want.
-
-## Installation
-
-> [!WARNING]
-> T3 Code currently supports Codex, Claude, Cursor, Grok Build, OpenCode, and Antigravity. Install and authenticate at least one provider before use:
->
-> - Codex: install [Codex CLI](https://developers.openai.com/codex/cli) and run `codex login`
-> - Claude: install [Claude Code](https://claude.com/product/claude-code) and run `claude auth login`
-> - Cursor: install [Cursor CLI](https://cursor.com/cli) and run `agent login`
-> - Grok Build: install [Grok Build CLI](https://x.ai/cli) and run `grok login`
-> - OpenCode: install [OpenCode](https://opencode.ai) and run `opencode auth login`
-> - Antigravity: enable it in Settings, then use **Install Antigravity** and **Sign in with Google**. No CLI is required.
-
-### Command line
+Use Node 24.13.1 or newer in the Node 24 series, and Corepack with pnpm 11.10.0.
 
 ```bash
-curl -fsSL https://t3.codes/install.sh | sh
+git clone https://github.com/David3u/t3bot.git
+cd t3bot
+git checkout feat/t3bot
+corepack pnpm install --frozen-lockfile
+node_modules/.bin/vp run dev --home-dir "$PWD/.t3bot-data"
 ```
 
-On Windows, in PowerShell:
+Open the pairing URL printed by the server. Development ports are chosen from the checkout path, so read the actual URL from the output. Keep the server running while bots work or run scheduled routines.
 
-```powershell
-irm https://t3.codes/install.ps1 | iex
-```
+Install and sign in to at least one harness before sending a task. Configure it in **Harnesses**. The inherited provider settings support built-in adapters and external agents that speak Agent Client Protocol (ACP). A harness without ACP needs a compatible T3 adapter. Available tools, permissions, models, and input types depend on the harness.
 
-Then run `t3` to start the server and open the local web app. `t3 service install` keeps it running in the background, `t3 update` moves to a newer release, and `t3 --help` has the full reference.
+## Use your bots
 
-To try it once without installing, run `npx t3@latest` instead.
+Create a named bot or choose a research, personal-assistant, or developer template. Each bot gets a workspace on its selected server. Open it to start a conversation; select a harness and model in the composer. **Workspaces** opens T3’s original project and conversation interface.
 
-### Desktop app
+**Profile & memory** changes the bot’s job and saved preferences. This context is supplied on future turns, including new conversations and provider switches. Past transcripts keep their own history. Profile revisions prevent two devices from silently overwriting each other’s edits. Keep passwords and API keys in the harness’s credential store.
 
-Install the latest version of the desktop app from [GitHub Releases](https://github.com/pingdotgg/t3code/releases), or from your favorite package registry:
+New bot profiles are excluded from Git by default. Saved preferences stay separate from code checkpoints.
 
-#### Windows (`winget`)
+**Skills** saves up to eight reusable workflows per bot. Enable or disable a workflow, edit its instructions, or remove it. Enabled workflows are supplied with the bot’s context across harnesses. These instructions do not install new tools or grant access to services.
+
+**Computer**, **Files**, and **Terminal** open T3’s existing work surfaces. The computer view is a server-hosted browser; full native desktop control and virtual-machine provisioning are not implemented. A workspace is an organizational boundary, not a process sandbox.
+
+After sending the first message, use **Routines** to schedule daily work in that conversation. Times use the server’s local timezone. The routine records the conversation’s harness and permission settings when created. You can run it immediately, pause it, or resume it. The Routines settings page also provides editing, deletion, other cadences, webhook triggers, and run history. Closing the client leaves server-owned work running; putting the host to sleep stops execution until it wakes.
+
+Pin important bots or hide them from the roster. Show hidden bots to reopen them. Hiding a bot does not pause its routines.
+
+Agents can use `t3_bot_list`, `t3_bot_create`, and `t3_bot_update` through T3’s MCP server. Bot execution uses the original conversation, approval, cancellation, delegation, recovery, and context-handoff services.
+
+## State and updates
+
+The fork defaults to `~/.t3bot`, port 3873 for the standalone server, separate Electron profiles, and T3bot application and URL-scheme IDs. `T3BOT_HOME` or the server’s `--base-dir` flag overrides the data directory. The development runner uses `--home-dir`. Development can use the checkout’s gitignored `.t3bot-data` directory as shown above. T3 Code’s `T3CODE_HOME` setting does not select T3bot state.
+
+Automatic desktop updates and advertised server self-updates are disabled until this fork has its own release channel. There are no published T3bot installers yet. Forking does not provision T3 Connect, OAuth applications, mobile signing, push notifications, or third-party integrations.
+
+## Build and check
 
 ```bash
-winget install T3Tools.T3Code
+node_modules/.bin/vp run --filter @t3tools/web build
+node_modules/.bin/vp run --filter t3 build:bundle
+node_modules/.bin/vp test run apps/server/src/bots/BotProfiles.test.ts apps/server/src/bots/BotService.test.ts
 ```
 
-#### macOS (Homebrew)
+The web UI is shared with Electron. The inherited React Native client remains available, but its bot-specific screens have not been ported. Group conversations, voice, messaging gateways, autonomous goal tracking, structured memory search, and a skill marketplace remain future work.
 
-```bash
-brew install --cask t3-code
-```
+## Upstream and license
 
-#### Debian, Ubuntu (`.deb`)
+Upstream is pinned initially at `d8d037eae1b77a77f372fd1afd2662a31ebe37c8`. Keep an `upstream` Git remote to merge improvements. Internal package names retain their upstream names to keep workspace tooling compatible; the server package is private and exposes the `t3bot` binary.
 
-Download the `.deb` from [GitHub Releases](https://github.com/pingdotgg/t3code/releases), then:
-
-```bash
-sudo apt install ./T3-Code-*.deb
-```
-
-#### Arch Linux (AUR)
-
-Stable:
-
-```bash
-yay -S t3code-bin
-```
-
-Nightly:
-
-```bash
-yay -S t3code-nightly-bin
-```
-
-The AUR packaging is maintained in this repository under [`packaging/aur`](./packaging/aur).
-
-## Some notes
-
-We are very very early in this project. Expect bugs.
-
-We are (mostly) not accepting contributions yet. Small fixes may be considered. Big features will not be.
-
-## Documentation
-
-Full docs live in [docs/](./docs). There's no docs site yet.
-
-- [Install and first run](./docs/user/install.md)
-- [Permission modes](./docs/user/permission-modes.md)
-- [Keyboard shortcuts](./docs/user/keybindings.md)
-- [Project settings](./docs/user/project-settings.md)
-- [Appearance preferences](./docs/user/appearance.md)
-- [Remote access from a phone or another machine](./docs/user/remote-access.md)
-- [Keeping app and server in sync](./docs/user/updating.md)
-- [Source control integrations](./docs/user/source-control.md)
-- Multiple accounts: [Codex](./docs/user/providers-codex.md) · [Claude](./docs/user/providers-claude.md)
-- [Run T3 Code as a background service](./docs/user/background-service.md)
-
-Building from source? Start at [docs/internals/overview.md](./docs/internals/overview.md).
-
-## If you REALLY want to contribute still.... read this first
-
-### Install `vp`
-
-T3 Code uses Vite+ so you'll need to install the global `vp` command-line tool.
-
-#### macOS / Linux
-
-```bash
-curl -fsSL https://vite.plus | bash
-```
-
-#### Windows
-
-```bash
-irm https://vite.plus/ps1 | iex
-```
-
-Checkout their getting started guide for more information: https://viteplus.dev/guide/
-
-### Install dependencies
-
-```bash
-vp i
-```
-
-Read [CONTRIBUTING.md](./CONTRIBUTING.md) before reporting a bug or opening a PR.
-
-Have a feature request? Start an [Ideas discussion](https://github.com/pingdotgg/t3code/discussions/categories/ideas).
-
-Need support? Join the [Discord](https://discord.gg/jn4EGJjrvv).
+The upstream [MIT license](LICENSE), copyright notices, and third-party notices are retained. See [the original README](README.upstream.md) for upstream context; its installers and hosted services belong to T3 Code.
