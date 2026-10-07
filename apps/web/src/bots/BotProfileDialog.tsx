@@ -103,20 +103,23 @@ export function BotProfileDialog({
       }}
     >
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{bot ? `About ${bot.profile.name}` : "Meet your next teammate"}</DialogTitle>
-          <DialogDescription>
-            {bot
-              ? "Its role and saved context follow it across conversations and harnesses."
-              : "Give your bot a name and a job. Choose its harness when you start chatting."}
-          </DialogDescription>
-        </DialogHeader>
         <form
+          className="flex min-h-0 flex-col"
           onSubmit={(event) => {
             event.preventDefault();
             void save();
           }}
         >
+          <DialogHeader>
+            <DialogTitle>
+              {bot ? `About ${bot.profile.name}` : "Meet your next teammate"}
+            </DialogTitle>
+            <DialogDescription>
+              {bot
+                ? "Its role and saved context follow it across conversations and harnesses."
+                : "Give your bot a name and a job. Choose its harness when you start chatting."}
+            </DialogDescription>
+          </DialogHeader>
           <DialogPanel>
             <div className="grid grid-cols-[72px_1fr] gap-4">
               <label className="space-y-2 text-sm">

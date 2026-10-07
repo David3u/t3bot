@@ -71,19 +71,20 @@ export function BotSkillsDialog({
       }}
     >
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{bot.profile.name}'s skills</DialogTitle>
-          <DialogDescription>
-            Save reusable workflows. Enabled skills follow this bot across harnesses and apply to
-            future turns.
-          </DialogDescription>
-        </DialogHeader>
         <form
+          className="flex min-h-0 flex-col"
           onSubmit={(event) => {
             event.preventDefault();
             void save();
           }}
         >
+          <DialogHeader>
+            <DialogTitle>{bot.profile.name}'s skills</DialogTitle>
+            <DialogDescription>
+              Save reusable workflows. Enabled skills follow this bot across harnesses and apply to
+              future turns.
+            </DialogDescription>
+          </DialogHeader>
           <DialogPanel>
             {skills.length === 0 ? (
               <p className="text-sm text-muted-foreground">

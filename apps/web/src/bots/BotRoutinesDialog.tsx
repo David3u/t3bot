@@ -87,19 +87,20 @@ export function BotRoutinesDialog({
       }}
     >
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{bot.profile.name}'s routines</DialogTitle>
-          <DialogDescription>
-            Repeat useful work and bring the result back to this conversation. Your server must stay
-            awake.
-          </DialogDescription>
-        </DialogHeader>
         <form
+          className="flex min-h-0 flex-col"
           onSubmit={(event) => {
             event.preventDefault();
             void save();
           }}
         >
+          <DialogHeader>
+            <DialogTitle>{bot.profile.name}'s routines</DialogTitle>
+            <DialogDescription>
+              Repeat useful work and bring the result back to this conversation. Your server must
+              stay awake.
+            </DialogDescription>
+          </DialogHeader>
           <DialogPanel>
             {tasks.length ? (
               <div className="divide-y divide-border">
